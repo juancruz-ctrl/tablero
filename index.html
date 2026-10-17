@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+<title>Tablero</title>
+<style>
+:root{--bg:#f6f5f2;--fg:#3a3a38}
+@media (prefers-color-scheme:dark){:root{--bg:#1c1c1b;--fg:#d8d6d0}}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:15px -apple-system,system-ui,sans-serif}
+#m{display:flex;height:100%;align-items:center;justify-content:center;text-align:center;padding:16px}
+</style></head>
+<body><div id="m">Cargando tablero…</div>
+<script>
+(async function(){
+  var m=document.getElementById('m');
+  try{
+    var k=new URLSearchParams(location.search).get('k');
+    if(!k){m.textContent='🔒 Abrilo desde el botón del bot en Telegram.';return;}
+    var b64=function(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0)});};
+    var raw=b64("UBKa582ZaUXC4ZpTaKx74Ys1F4LX2xFzg4TovEdE9o0NOd3btiBT64E5AFpC2J246m+3EcEiszEfrRca+UDIo9idivsTY/r5PIp/GEiUQzP4r3vPBhm5jzf58wW2mtpbh7eQZOzEmlYq+aDkVg52UG5gHAZB1Us7Fk5CXRgHBfgqY973+9vFHPsAENLwQ23ZZxaz5ws9wuiFP+i1uRvAr7gIWgkvP9mG3juxLJb3rTa7IKuu3358g9FJMJpsxANXfMK3VoUqkuUdrjHGJHsNAMNfPH1SItL055Mq3wrvhwNI+cwP8EBLzDU4WIzVkRBpgirhL8ywKNC2b0gD+2bZJXr7w9SdowwLVETweuoQp9Z/1xAjkUML5544ucFjiRUFDk074CmOp9E3D/7kuIFndGqUblvbeKRgk4DaXD4dHBwRXEml7T8RBB7VMYVStj0LGjqlS5Fw7TKkOxdzGunkAMyl/vcunyepyAtJE7JOa+NTmHkSbjYTUy7jUBgM2evs5gIbroH67/LDHk3Ig6bb3f5HN+W1dW8OuACBVcT8kfa8JfJ0G1I7F+7+8TKDIU9Pf3JfokhvuoKtceqM+CgbwEyRU+y61YReDVGU1Oovo0N7zpVhNX5/Y3hjWlHguyzfkkxGMXnez64r3jFkvK71qXcGzTCYYFyV1KbP9G788Ny3Ho01d37rFYV/5X98Yd52Arz0FnMb");
+    var key=await crypto.subtle.importKey('raw',b64(k),'AES-GCM',false,['decrypt']);
+    var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:raw.slice(0,12)},key,raw.slice(12));
+    var d=new DOMParser().parseFromString(new TextDecoder().decode(pt),'text/html');
+    document.head.innerHTML=d.head.innerHTML;
+    document.body.innerHTML=d.body.innerHTML;
+    // innerHTML no ejecuta <script>: recrearlos en orden (los externos esperan a cargar).
+    var ss=Array.prototype.slice.call(document.querySelectorAll('script'));
+    for(var i=0;i<ss.length;i++){
+      var o=ss[i],n=document.createElement('script');
+      for(var j=0;j<o.attributes.length;j++)n.setAttribute(o.attributes[j].name,o.attributes[j].value);
+      n.text=o.text;
+      var listo=o.src?new Promise(function(r){n.onload=n.onerror=r;}):null;
+      o.parentNode.replaceChild(n,o);
+      if(listo)await listo;
+    }
+  }catch(e){m.textContent='🔒 No se pudo abrir el tablero ('+(e&&e.name||'error')+').';}
+})();
+</script>
+<!-- alta -->
+</body></html>
